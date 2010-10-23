@@ -5,6 +5,7 @@ SSGI is a low-level API for developing web applications and web frameworks in [S
 ## Similar frameworks
 
 SSGI is influenced by server gateways in several other languages:
+
 * Ruby's [Rack](http://rack.rubyforge.org/)
 * Python's [WSGI](http://www.python.org/dev/peps/pep-333/)
 * Perl's [PSGI/Plack](http://plackperl.org/) 
