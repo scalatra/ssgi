@@ -14,4 +14,15 @@ package org.scalatra.ssgi
  *
  * @param body The response body.  Should be transformed to a Traversable[Byte] before returning to the web server.
  */
-case class Response[+A](status: Int = 200, headers: Map[String, String] = Map.empty, body: A)
+case class Response[+A](status: Int = 200, headers: Map[String, String] = Map.empty, body: A) {
+  /**
+   * Returns a response by applying a function to this response's body.  The new response has the same status and
+   * headers, and its body is the result of the function.
+   */
+  def map[B](f: A => B): Response[B] = copy(body = f(body))
+
+  /**
+   * Returns a new response by applying a function to this response's body.
+   */
+  def flatMap[B](f: A => Response[B]): Response[B] = f(body)
+}
