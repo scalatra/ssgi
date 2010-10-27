@@ -15,5 +15,6 @@ class SsgiProject(info: ProjectInfo) extends DefaultProject(info) {
   trait SsgiSubProject {
     this: BasicScalaProject =>
     val scalatest = "org.scalatest" % "scalatest" % "1.2" % "test"
+    val mockito = "org.mockito" % "mockito-core" % "1.8.5" % "test"
   }
 }
