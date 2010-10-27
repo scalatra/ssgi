@@ -9,7 +9,7 @@ class SsgiProject(info: ProjectInfo) extends DefaultProject(info) {
 
   lazy val servlet = project("servlet", "servlet", new ServletProject(_), core)
   class ServletProject(info: ProjectInfo) extends DefaultProject(info) with SsgiSubProject {
-    val servletApi = "javax.servlet" % "servlet-api" % "2.5" % "provided"
+    val servletApi = "javax.servlet" % "servlet-api" % "2.5" % "provided" withSources
   }
 
   trait SsgiSubProject {
