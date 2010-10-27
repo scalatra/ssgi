@@ -154,4 +154,33 @@ class ServletRequestSpec extends Spec with ShouldMatchers with MockitoSugar with
       req.inputStream should be (inputStream)
     }
   }
+
+  describe("ServletRequest.attributes") {
+    it("should iterate over all attributes") {
+      when(delegate.getAttributeNames.asInstanceOf[Enumeration[String]]) thenReturn Iterator("foo", "bar")
+      when(delegate.getAttribute("foo")).thenReturn(<oof />, Array[Object](): _*)
+      when(delegate.getAttribute("bar")).thenReturn("rab", Array[Object](): _*)
+      req.attributes should equal (Map("foo" -> <oof />, "bar" -> "rab"))
+    }
+
+    it("should return Some(val) for a known attribute") {
+      when(delegate.getAttribute("foo")).thenReturn(<oof />, Array[Object](): _*)
+      req.attributes.get("foo") should equal (Some(<oof />))
+    }
+
+    it("should return None for an unknown header") {
+      when(delegate.getHeaders("Unknown")) thenReturn null
+      req.attributes.get("Unknown") should equal (None)
+    }
+
+    it("should setAttribute on update") {
+      req.attributes("ssgi") = "rocks"
+      verify(delegate).setAttribute("ssgi", "rocks")
+    }
+
+    it("should removeAttribute on remove") {
+      req.attributes.remove("servlet dependency")
+      verify(delegate).removeAttribute("servlet dependency")
+    }
+  }
 }

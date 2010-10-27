@@ -1,6 +1,7 @@
 package org.scalatra.ssgi
 
 import scala.collection.Map
+import scala.collection.mutable.{Map => MMap}
 import java.io.{PrintWriter, InputStream}
 
 /**
@@ -96,5 +97,5 @@ trait Request {
   /**
    * A map in which the server or application may store its own data.
    */
-  def attributes: Map[String, Any] = Map.empty
+  def attributes: MMap[String, Any] = MMap.empty
 }

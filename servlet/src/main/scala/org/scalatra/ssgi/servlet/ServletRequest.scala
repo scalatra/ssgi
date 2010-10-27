@@ -2,11 +2,12 @@ package org.scalatra.ssgi
 package servlet
 
 import javax.servlet.http.{HttpServletRequest, HttpServletRequestWrapper}
-import scala.collection.Map
 import scala.collection.immutable.DefaultMap
 import scala.collection.JavaConversions._
 import java.io.InputStream
 import java.util.Enumeration
+import scala.collection.{Iterator, Map}
+import collection.mutable. {MapLike, Map => MMap}
 
 /**
  * An HttpServletRequestWrapper that also implements the SSGI request interface.
@@ -43,4 +44,21 @@ class ServletRequest(private val r: HttpServletRequest) extends HttpServletReque
   def scheme: String = getScheme
 
   def inputStream: InputStream = getInputStream
+
+  override lazy val attributes: MMap[String, Any] = new MMap[String, Any] {
+    def get(name: String): Option[Any] = Option(getAttribute(name))
+
+    def iterator: Iterator[(String, Any)] =
+      getAttributeNames.asInstanceOf[Enumeration[String]] map { name => (name, getAttribute(name)) }
+
+    def +=(kv: (String, Any)) = {
+      setAttribute(kv._1, kv._2)
+      this
+    }
+
+    def -=(name: _root_.scala.Predef.String) = {
+      removeAttribute(name)
+      this
+    }
+  }
 }
