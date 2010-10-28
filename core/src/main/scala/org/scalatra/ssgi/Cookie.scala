@@ -9,9 +9,9 @@ case class CookieOptions(
         maxAge  : Int     = -1,
         secure  : Boolean = false,
         comment : String  = "",
+        version: Int = 1,
         httpOnly: Boolean = false,
-        encoding: String  = "UTF-8",
-        version: Int = 1)
+        encoding: String  = "UTF-8" )
 
 case class Cookie(name: String, value: String)(implicit cookieOptions: CookieOptions = CookieOptions()) {
 
