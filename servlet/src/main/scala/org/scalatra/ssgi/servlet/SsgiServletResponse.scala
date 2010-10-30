@@ -1,11 +1,11 @@
-package org.scalatra.ssgi.servlet
+package org.scalatra.ssgi
+package servlet
 
 import javax.servlet.http.{Cookie => ServletCookie, HttpServletResponse}
 import java.lang.String
 import java.text.SimpleDateFormat
 import java.util.{Calendar, TimeZone, Locale}
 import java.io.{PrintWriter}
-import org.scalatra.ssgi.{CookieOptions, Cookie, Response}
 
 trait SsgiResponseWrapping {
 
