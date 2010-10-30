@@ -1,8 +1,9 @@
-package org.scalatra.ssgi.servlet
+package org.scalatra.ssgi
+package servlet
 
 import javax.servlet.ServletConfig
 import javax.servlet.http.{HttpServletResponse, HttpServletRequest, HttpServlet}
-import org.scalatra.ssgi.{Response, Request, Application}
+import java.nio.charset.Charset
 
 class SsgiServlet extends HttpServlet {
 
@@ -17,7 +18,11 @@ class SsgiServlet extends HttpServlet {
       val response = app(new ServletRequest(req))
       resp.setStatus(response.status)
       response.headers foreach { case (key, value) => resp.addHeader(key, value) }
-      resp.getOutputStream.write(response.body.toArray)
+      val encoding = Charset.forName(resp.getCharacterEncoding)
+      (response.body:Renderable) match {
+        case cr: CharRenderable => cr.writeTo(resp.getWriter)
+        case r: Renderable => r.writeTo(resp.getOutputStream, encoding)
+      }
     }
   }
 }
