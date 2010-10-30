@@ -2,7 +2,6 @@ package org.scalatra.ssgi.servlet
 
 import javax.servlet.http.{Cookie => ServletCookie, HttpServletResponse}
 import java.lang.String
-import sun.reflect.generics.reflectiveObjects.NotImplementedException
 import java.text.SimpleDateFormat
 import java.util.{Calendar, TimeZone, Locale}
 import java.io.{PrintWriter}
@@ -76,8 +75,7 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
   }
 
   def sendError(code: Int, message: String) = {
-    // TODO: Actually implement something useful here
-    throw new NotImplementedException
+    setStatus(code, message)
   }
 
   def encodeRedirectUrl(url: String) = encodeURL(url)
