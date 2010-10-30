@@ -3,10 +3,17 @@ package org.scalatra.ssgi
 import scala.xml.NodeSeq
 import java.nio.charset.Charset
 import annotation.tailrec
-import java.io.{File, FileInputStream, InputStream, OutputStream}
+import java.io._
 
 trait Renderable {
   def writeTo(out: OutputStream, charset: Charset): Unit
+}
+
+/**
+ * Extension for character-based types that can be more efficiently rendered to a Writer.
+ */
+trait CharRenderable extends Renderable {
+  def writeTo(writer: Writer): Unit
 }
 
 object Renderable {
@@ -18,8 +25,9 @@ object Renderable {
     def writeTo(out: OutputStream, cs: Charset) { out.write(bytes) }
   }
 
-  implicit def stringToRenderable(string: String) = new Renderable {
+  implicit def stringToRenderable(string: String) = new CharRenderable {
     def writeTo(out: OutputStream, cs: Charset) { out.write(string.getBytes(cs)) }
+    def writeTo(writer: Writer) { writer.write(string) }
   }
 
   implicit def nodeSeqToRenderable(nodeSeq: NodeSeq) = stringToRenderable(nodeSeq.toString)
