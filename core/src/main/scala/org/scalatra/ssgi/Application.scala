@@ -1,7 +1,6 @@
 package org.scalatra.ssgi
 
 /**
- * An application is a function that takes exactly one argument, a request, and returns a response with a body of
- * type Traversable[Byte].
+ * An application is a function that takes exactly one argument, a request, and returns a response.
  */
-trait Application extends (Request => Response[Traversable[Byte]])
+trait Application[+A] extends (Request => Response[A])

@@ -13,7 +13,7 @@ class SsgiServlet extends HttpServlet {
   override def service(req: HttpServletRequest, resp: HttpServletResponse) = {
     if(! resp.isCommitted) {
       // This doesn't work it's just an example
-      val app = new Application{ def apply(r: Request) = Response(200, Map.empty, Array[Byte]())} 
+      val app = new Application[Array[Byte]]{ def apply(r: Request) = Response(200, Map.empty, Array[Byte]())}
       val response = app(new ServletRequest(req))
       resp.setStatus(response.status)
       response.headers foreach { case (key, value) => resp.addHeader(key, value) }
