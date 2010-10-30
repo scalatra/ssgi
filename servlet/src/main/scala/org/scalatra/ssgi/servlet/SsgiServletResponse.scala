@@ -3,9 +3,9 @@ package servlet
 
 import javax.servlet.http.{Cookie => ServletCookie, HttpServletResponse}
 import java.lang.String
-import java.text.SimpleDateFormat
 import java.util.{Calendar, TimeZone, Locale}
 import java.io.{PrintWriter}
+import org.apache.commons.lang.time.FastDateFormat
 
 trait SsgiResponseWrapping {
 
@@ -18,8 +18,7 @@ trait SsgiResponseWrapping {
 object SsgiServletResponse {
   val DEFAULT_CONTENT_TYPE = "text/plain"
   val DEFAULT_ENCODING = "UTF-8"
-  val DATE_FORMAT = new SimpleDateFormat("EEE', 'dd' 'MMM' 'yyyy' 'HH:mm:ss' 'Z")
-  DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"))
+  val DATE_FORMAT = FastDateFormat.getInstance("EEE', 'dd' 'MMM' 'yyyy' 'HH:mm:ss' 'Z", TimeZone.getTimeZone("GMT"))
 
 }
 
