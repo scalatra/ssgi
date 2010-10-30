@@ -79,22 +79,36 @@ class RenderableSpec extends WordSpec with ShouldMatchers {
   }
 
   "A file" should {
-    "write itself to an output stream" in {
-      val bytes = "File".getBytes
+    def withTempFile(content: Array[Byte])(f: File => Unit) {
       val file = File.createTempFile("ssgitest", "tmp")
       try {
-        val fw = new FileWriter(file)
+        val fos = new FileOutputStream(file)
         try {
-          fw.write("File");
-          fw.flush();
+          fos.write(content);
+          fos.flush();
         }
         finally {
-          fw.close();
+          fos.close();
         }
-        renderViaStream(file) should equal (bytes)
+        f(file)
       }
       finally {
         file.delete();
+      }
+    }
+
+    "write itself to an output stream" in {
+      val bytes = "File".getBytes
+      withTempFile(bytes) { file =>
+        renderViaStream(file) should equal (bytes)
+      }
+    }
+
+    "return itself as a file" in {
+      val bytes = "File".getBytes
+      withTempFile(bytes) { file =>
+        val renderable: FileRenderable = file
+        renderable.file should equal (file)
       }
     }
   }
