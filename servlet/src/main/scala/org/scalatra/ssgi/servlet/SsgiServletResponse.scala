@@ -5,8 +5,8 @@ import java.lang.String
 import sun.reflect.generics.reflectiveObjects.NotImplementedException
 import java.text.SimpleDateFormat
 import java.util.{Calendar, TimeZone, Locale}
-import java.io.{PrintWriter, ByteArrayOutputStream}
-import org.scalatra.ssgi.{Implicits, CookieOptions, Cookie, Response}
+import java.io.{PrintWriter}
+import org.scalatra.ssgi.{CookieOptions, Cookie, Response}
 
 trait SsgiResponseWrapping {
 
@@ -23,27 +23,22 @@ object SsgiServletResponse {
   DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"))
 
 }
-class SsgiServletResponse extends HttpServletResponse with SsgiResponseWrapping {
+class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServletResponse with SsgiResponseWrapping {
 
   import SsgiServletResponse._
-  import Implicits._
 
-  var _body: String = null
   var _out = new ByteArrayServletOutputStream
   var _pw = new PrintWriter(_out, false)
 
 
   def ssgiResponse = {
-    if(_body.isNonBlank && _out.size == 0) {
-      _ssgiResponse.copy(body = _body.getBytes(getCharacterEncoding))
-    } else {
-      _ssgiResponse.copy(body = _out.toByteArray)
-    }
+    val hdrs = generateDefaultHeaders
+    _ssgiResponse.copy(headers = hdrs, body = _out.toByteArray)
   }
 
   def setStatus(statusCode: Int, body: String) = {
-    _body = body
-    _ssgiResponse = _ssgiResponse.copy(statusCode, body = _body)
+    _pw.write(body)
+    _ssgiResponse = _ssgiResponse.copy(statusCode)
   }
 
   def setStatus(statusCode: Int) = {
@@ -92,8 +87,7 @@ class SsgiServletResponse extends HttpServletResponse with SsgiResponseWrapping 
   def encodeRedirectURL(url: String) = encodeURL(url)
 
   def encodeURL(url: String) = {
-    // TODO: implement this with taking into account the session id cookie and url encode stuff after '?'
-    url
+    r.encodeURL(url)
   }
 
   def containsHeader(key: String) = _ssgiResponse.headers.contains(key)
@@ -156,8 +150,7 @@ class SsgiServletResponse extends HttpServletResponse with SsgiResponseWrapping 
   def setCharacterEncoding(encoding: String) = {
     //TODO: make this more sensible? There might be more content in there than just a charset
     val newType = getContentType.split(";").head + "; charset=" + encoding
-    val newBody = if(_body.isNonBlank) _body.getBytes(encoding) else _ssgiResponse.body
-    _ssgiResponse = _ssgiResponse.copy(headers = _ssgiResponse.headers + ("Content-Type" -> newType), body = newBody)
+    _ssgiResponse = _ssgiResponse.copy(headers = _ssgiResponse.headers + ("Content-Type" -> newType))
     setHeader("Content-Type", newType)
   }
 
@@ -176,6 +169,15 @@ class SsgiServletResponse extends HttpServletResponse with SsgiResponseWrapping 
     } else {
       DEFAULT_ENCODING
     }
+  }
+
+  private def generateDefaultHeaders = {
+    var headers = _ssgiResponse.headers
+    if(!headers.contains("Content-Type")) headers += "Content-Type" -> "%s; charset=%s".format(getContentType, getCharacterEncoding)
+    if(!headers.contains("Content-Length")) headers += "Content-Length" -> _out.size.toString
+    if(!headers.contains("Content-Language")) headers += "Content-Language" -> getLocale.toString.replace('_', '-')
+    if(!headers.contains("Date")) setDateHeader("Date", Calendar.getInstance.getTimeInMillis)
+    headers
   }
 
   private def addSsgiHeader(name: String, value: String) = {
