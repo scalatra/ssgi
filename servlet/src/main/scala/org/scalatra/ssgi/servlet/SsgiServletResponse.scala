@@ -3,15 +3,16 @@ package org.scalatra.ssgi.servlet
 import javax.servlet.http.{Cookie => ServletCookie, HttpServletResponse}
 import java.lang.String
 import sun.reflect.generics.reflectiveObjects.NotImplementedException
-import org.scalatra.ssgi.{CookieOptions, Cookie, Response}
 import java.text.SimpleDateFormat
 import java.util.{Calendar, TimeZone, Locale}
+import java.io.{PrintWriter, ByteArrayOutputStream}
+import org.scalatra.ssgi.{Implicits, CookieOptions, Cookie, Response}
 
 trait SsgiResponseWrapping {
 
-  private[servlet] var _ssgiResponse: Response[Traversable[Byte]] = null
+  private[servlet] var _ssgiResponse: Response[Any] = Response(200, Map.empty, Nil)
 
-  def ssgiResponse = _ssgiResponse
+  def ssgiResponse: Response[Any]
   
 }
 
@@ -25,9 +26,24 @@ object SsgiServletResponse {
 class SsgiServletResponse extends HttpServletResponse with SsgiResponseWrapping {
 
   import SsgiServletResponse._
+  import Implicits._
+
+  var _body: String = null
+  var _out = new ByteArrayServletOutputStream
+  var _pw = new PrintWriter(_out, false)
+
+
+  def ssgiResponse = {
+    if(_body.isNonBlank && _out.size == 0) {
+      _ssgiResponse.copy(body = _body.getBytes(getCharacterEncoding))
+    } else {
+      _ssgiResponse.copy(body = _out.toByteArray)
+    }
+  }
 
   def setStatus(statusCode: Int, body: String) = {
-    _ssgiResponse = _ssgiResponse.copy(statusCode, body = body.getBytes(getCharacterEncoding))
+    _body = body
+    _ssgiResponse = _ssgiResponse.copy(statusCode, body = _body)
   }
 
   def setStatus(statusCode: Int) = {
@@ -89,7 +105,7 @@ class SsgiServletResponse extends HttpServletResponse with SsgiResponseWrapping 
       locLang.split("-").toList match {
         case lang :: Nil => new Locale(lang)
         case lang :: country :: Nil => new Locale(lang, country)
-        case lang :: country :: variant :: Nil => new Locale(lang, country, variant)
+        case lang :: country :: variant :: whatever => new Locale(lang, country, variant)
         case _ => Locale.getDefault
       }
     }
@@ -101,23 +117,36 @@ class SsgiServletResponse extends HttpServletResponse with SsgiResponseWrapping 
   }
 
   def reset = {
-    // TODO: make this evil
+    _ssgiResponse = Response(200, Map.empty, Nil)
+    _out = new ByteArrayServletOutputStream
+    _pw = new PrintWriter(_out, false)
   }
 
   def isCommitted = false
 
   def resetBuffer = {
-    // TODO: make this evil
+    _ssgiResponse = _ssgiResponse.copy(body = Nil)
+    _out = new ByteArrayServletOutputStream
+    _pw = new PrintWriter(_out, false)
   }
 
+  /**
+   * This is a NOOP The interface is legacy. It's preferred to use the SSGI Repsonse class
+   */
   def flushBuffer = {
-    // TODO: make this evil
+
   }
 
-  def getBufferSize = 0
+  /**
+   * This is a NOOP The interface is legacy. It's preferred to use the SSGI Repsonse class
+   */
+  def getBufferSize = Int.MaxValue
 
+  /**
+   * This is a NOOP The interface is legacy. It's preferred to use the SSGI Repsonse class
+   */
   def setBufferSize(size: Int) = {
-    // TODO: make this evil
+
   }
 
   def setContentType(contentType: String) = setHeader("Content-Type", contentType)
@@ -127,12 +156,14 @@ class SsgiServletResponse extends HttpServletResponse with SsgiResponseWrapping 
   def setCharacterEncoding(encoding: String) = {
     //TODO: make this more sensible? There might be more content in there than just a charset
     val newType = getContentType.split(";").head + "; charset=" + encoding
+    val newBody = if(_body.isNonBlank) _body.getBytes(encoding) else _ssgiResponse.body
+    _ssgiResponse = _ssgiResponse.copy(headers = _ssgiResponse.headers + ("Content-Type" -> newType), body = newBody)
     setHeader("Content-Type", newType)
   }
 
-  def getWriter = null
+  def getWriter = _pw
 
-  def getOutputStream = null
+  def getOutputStream = _out
 
   def getContentType = _ssgiResponse.headers.get("Content-Type") getOrElse DEFAULT_CONTENT_TYPE
 
