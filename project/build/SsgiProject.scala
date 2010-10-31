@@ -13,6 +13,14 @@ class SsgiProject(info: ProjectInfo) extends DefaultProject(info) {
     val servletApi = "javax.servlet" % "servlet-api" % "2.5" % "provided" withSources
   }
 
+  lazy val examples = project("examples", "example", new Examples(_))
+  class Examples(info: ProjectInfo) extends ParentProject(info) {
+    val servletExample = project("servlet", "servlet-example", new ServletExampleProject(_), servlet)
+    class ServletExampleProject(info: ProjectInfo) extends DefaultWebProject(info) with SsgiSubProject {
+      val jetty6 = "org.mortbay.jetty" % "jetty" % "6.1.25" % "test"
+    }
+  }
+
   trait SsgiSubProject {
     this: BasicScalaProject =>
     val scalatest = "org.scalatest" % "scalatest" % "1.2" % "test"
