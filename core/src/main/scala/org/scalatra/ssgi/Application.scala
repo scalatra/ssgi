@@ -3,8 +3,8 @@ package org.scalatra.ssgi
 /**
  * An application is a function that takes exactly one argument, a request, and returns a response.
  */
-trait Application[+A] extends (Request => Response[A])
+trait Application extends (Request => Response[_])
 
 object Application {
-  implicit def apply[A](f: Request => Response[A]) = new Application[A]{ def apply(req: Request) = f(req) }
+  implicit def apply(f: Request => Response[_]) = new Application { def apply(req: Request) = f(req) }
 }

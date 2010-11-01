@@ -8,7 +8,7 @@ import java.nio.charset.Charset
 class SsgiServlet extends HttpServlet {
   import SsgiServlet._
 
-  private var application: Application[_] = _
+  private var application: Application = _
 
   override def init(config: ServletConfig) {
     config.getInitParameter(ApplicationClassName) match {
@@ -19,7 +19,7 @@ class SsgiServlet extends HttpServlet {
 
   protected def loadApplication(className: String) {
     val appClass = getClass.getClassLoader.loadClass(className)
-    application = appClass.newInstance.asInstanceOf[Application[_]]
+    application = appClass.newInstance.asInstanceOf[Application]
   }
 
   override def service(req: HttpServletRequest, resp: HttpServletResponse) = {
