@@ -2,16 +2,36 @@ package org.scalatra.ssgi
 
 import java.util.Locale
 
-sealed trait HttpMethod
-case object Options extends HttpMethod
-case object Get extends HttpMethod
-case object Head extends HttpMethod
-case object Post extends HttpMethod
-case object Put extends HttpMethod
-case object Delete extends HttpMethod
-case object Trace extends HttpMethod
-case object Connect extends HttpMethod
-case class ExtensionMethod(name: String) extends HttpMethod
+sealed trait HttpMethod {
+  def isSafe: Boolean
+}
+case object Options extends HttpMethod {
+  def isSafe = true
+}
+case object Get extends HttpMethod {
+  def isSafe = true
+}
+case object Head extends HttpMethod {
+  def isSafe = true
+}
+case object Post extends HttpMethod {
+  def isSafe = false
+}
+case object Put extends HttpMethod {
+  def isSafe = false
+}
+case object Delete extends HttpMethod {
+  def isSafe = false
+}
+case object Trace extends HttpMethod {
+  def isSafe = true
+}
+case object Connect extends HttpMethod {
+  def isSafe = false
+}
+case class ExtensionMethod(name: String) extends HttpMethod {
+  def isSafe = false
+}
 
 object HttpMethod {
   private val methodMap = Map(
