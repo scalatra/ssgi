@@ -1,0 +1,16 @@
+;; This config was generated using ensime-config-gen. Feel free to customize its contents manually.
+
+(
+
+:server-root "~/.emacs.d/ensime"
+
+:project-package "org.scalatra.ssgi.servlet"
+
+:use-sbt t
+
+:compile-jars ("./lib_managed/scala_2.8.0/compile/" "../project/boot/scala-2.8.0/lib/" "../core/lib_managed/scala_2.8.0/compile")
+
+:class-dirs ( "../core/target/scala_2.8.0/classes" )
+
+)
+
