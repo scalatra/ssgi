@@ -98,4 +98,9 @@ trait Request {
    * A map in which the server or application may store its own data.
    */
   def attributes: MMap[String, Any] = MMap.empty
+
+  /**
+   * A Map of the parameters of this request. Parameters are contained in the query string or posted form data.
+   */
+  def parameterMap: Map[String, Seq[String]]
 }

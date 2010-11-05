@@ -61,4 +61,7 @@ class ServletRequest(private val r: HttpServletRequest) extends HttpServletReque
       this
     }
   }
+
+  lazy val parameterMap = getParameterMap.asInstanceOf[java.util.Map[String,Array[String]]]
+    .toMap.transform { (k, v) => v: Seq[String] }
 }

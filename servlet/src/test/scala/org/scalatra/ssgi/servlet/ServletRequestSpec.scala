@@ -7,7 +7,7 @@ import org.scalatest.mock.MockitoSugar
 import org.mockito.Mockito._
 import javax.servlet.http.HttpServletRequest
 import scala.collection.JavaConversions._
-import java.util.Enumeration
+import java.util.{Enumeration, Map => JMap}
 import javax.servlet.ServletInputStream
 
 class ServletRequestSpec extends Spec with ShouldMatchers with MockitoSugar with OneInstancePerTest {
@@ -181,6 +181,14 @@ class ServletRequestSpec extends Spec with ShouldMatchers with MockitoSugar with
     it("should removeAttribute on remove") {
       req.attributes.remove("servlet dependency")
       verify(delegate).removeAttribute("servlet dependency")
+    }
+  }
+
+  describe("ServletRequest.parameterMap") {
+    it("should equal a Scalified version of request.getParameters") {
+      val map = Map("1" -> Array("one"), "2" -> Array("two", "dos")).toMap
+      when(delegate.getParameterMap.asInstanceOf[JMap[String, Array[String]]]).thenReturn(map, Array(): _*)
+      req.parameterMap should equal (Map("1" -> Seq("one"), "2" -> Seq("two", "dos")))
     }
   }
 }
