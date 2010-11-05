@@ -49,4 +49,6 @@ object HttpMethod {
     val canonicalName = name.toUpperCase(Locale.ENGLISH)
     methodMap.getOrElse(canonicalName, ExtensionMethod(canonicalName))
   }
+
+  val methods: Set[HttpMethod] = methodMap.values.toSet
 }
