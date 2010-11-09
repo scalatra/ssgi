@@ -29,3 +29,10 @@ case class Response[+A](status: Int = 200, headers: Map[String, String] = Map.em
 
   def renderableBody: Renderable = renderer(body)
 }
+
+object Response {
+  /**
+   * An empty response with a status of OK.
+   */
+  val Ok: Response[String] = Response(status = 200, body = "")
+}
