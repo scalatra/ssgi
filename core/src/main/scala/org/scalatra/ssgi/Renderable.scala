@@ -74,4 +74,9 @@ object Renderable {
       }
       def writeTo(writer: Writer) { writesToWriter.writeTo(writer) }
     }
+
+  implicit def writesToStreamToRenderable(writesToStream: { def writeTo(out: OutputStream): Unit }) =
+    new Renderable {
+      def writeTo(out: OutputStream, cs: Charset) { writesToStream.writeTo(out) }
+    }
 }

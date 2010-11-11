@@ -129,4 +129,17 @@ class RenderableSpec extends WordSpec with ShouldMatchers {
       renderViaWriter(new WritesToWriter) should equal (string)
     }
   }
+
+  "Something that can write to an output stream" should {
+    val bytes = "bytes".getBytes
+    class WritesToOutputStream {
+      def writeTo(out: OutputStream) = {
+        out.write(bytes)
+      }
+    }
+
+    "implicitly render itself to an output stream" in {
+      renderViaStream(new WritesToOutputStream) should equal (bytes)
+    }
+  }
 }
