@@ -4,7 +4,7 @@ import scala.xml.NodeSeq
 import java.nio.charset.Charset
 import annotation.tailrec
 import java.io._
-import java.nio.channels.WritableByteChannel
+import resource._
 
 trait Renderable {
   def writeTo(out: OutputStream, charset: Charset): Unit
@@ -64,4 +64,14 @@ object Renderable {
   implicit def inputStreamToRenderable(input: InputStream) = new InputStreamRenderable { def in = input }
 
   implicit def fileToRenderable(theFile: File) = new FileRenderable { def file = theFile }
+
+  implicit def writesToWriterToCharRenderable(writesToWriter: { def writeTo(writer: Writer): Unit }) =
+    new CharRenderable {
+      def writeTo(out: OutputStream, cs: Charset) {
+        for (writer <- managed(new OutputStreamWriter(out, cs))) {
+          writeTo(writer)
+        }
+      }
+      def writeTo(writer: Writer) { writesToWriter.writeTo(writer) }
+    }
 }

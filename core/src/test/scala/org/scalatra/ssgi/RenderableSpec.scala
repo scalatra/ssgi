@@ -112,4 +112,21 @@ class RenderableSpec extends WordSpec with ShouldMatchers {
       }
     }
   }
+
+  "Something that can write to a writer" should {
+    val string = "foo!"
+    class WritesToWriter {
+      def writeTo(writer: Writer) = {
+        writer.write(string)
+      }
+    }
+
+    "implicitly render itself to an output stream" in {
+      renderViaStream(new WritesToWriter) should equal (string.getBytes)
+    }
+
+    "implicitly render itself to a writer" in {
+      renderViaWriter(new WritesToWriter) should equal (string)
+    }
+  }
 }

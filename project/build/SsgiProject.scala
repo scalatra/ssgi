@@ -6,6 +6,7 @@ class SsgiProject(info: ProjectInfo) extends DefaultProject(info) {
     val servletApi = "javax.servlet" % "servlet-api" % "2.5" % "provided"
     val commonsLang =  "commons-lang" % "commons-lang" % "2.5"
     val mimeUtil = "eu.medsea.mimeutil" % "mime-util" % "2.1.3"
+    val scalaArm = "com.github.jsuereth.scala-arm" % "scala-arm_2.8.0" % "0.2"
   }
 
   lazy val servlet = project("servlet", "ssgi-servlet", new ServletProject(_), core)
