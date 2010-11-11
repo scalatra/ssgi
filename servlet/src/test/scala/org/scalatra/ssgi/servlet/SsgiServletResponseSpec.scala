@@ -14,7 +14,7 @@ class SsgiServletResponseSpec extends WordSpec with MustMatchers with MockitoSug
   when(mockResponse.encodeURL(anyString)) thenReturn "encoded"
 
   val resp = new SsgiServletResponse(mockResponse)
-  val actual = resp.ssgiResponse
+  def actual = resp()
 
   "A SsgiServletResponse" when {
 
@@ -65,7 +65,7 @@ class SsgiServletResponseSpec extends WordSpec with MustMatchers with MockitoSug
 
       "set the content length" in {
         resp.setContentLength(12345)
-        resp.ssgiResponse.headers.get("Content-Length") must be (Some("12345"))
+        resp().headers.get("Content-Length") must be (Some("12345"))
       }
 
       "set the content type" in {
@@ -75,7 +75,7 @@ class SsgiServletResponseSpec extends WordSpec with MustMatchers with MockitoSug
 
       "set the locale" in {
         resp.setLocale(Locale.US)
-        resp.ssgiResponse.headers.get("Content-Language") must be (Some("en-us"))
+        resp().headers.get("Content-Language") must be (Some("en-us"))
       }
 
       "get the locale" in {
@@ -100,7 +100,7 @@ class SsgiServletResponseSpec extends WordSpec with MustMatchers with MockitoSug
         resp.getWriter.println("Make body non-empty")
         resp.setStatus(400)
         resp.reset
-        resp.ssgiResponse.status must be (200)
+        resp().status must be (200)
         resp.getOutputStream.size must be (0)
       }
 
@@ -110,26 +110,26 @@ class SsgiServletResponseSpec extends WordSpec with MustMatchers with MockitoSug
 
       "setting the status should change the status code" in {
         resp.setStatus(404)
-        resp.ssgiResponse.status must be (404)
+        resp().status must be (404)
       }
 
       "setting an int header should replace an existing int header" in {
         resp.setIntHeader("theHeader", 4)
-        resp.ssgiResponse.headers.get("theHeader") must be (Some("4"))
+        resp().headers.get("theHeader") must be (Some("4"))
         resp.setIntHeader("theHeader", 7)
-        resp.ssgiResponse.headers.get("theHeader") must be (Some("7"))
+        resp().headers.get("theHeader") must be (Some("7"))
       }
 
       "adding an int header should not replace an existing int header" in {
         resp.addIntHeader("theHeader", 4)
-        resp.ssgiResponse.headers.get("theHeader") must be (Some("4"))
+        resp().headers.get("theHeader") must be (Some("4"))
         resp.addIntHeader("theHeader", 7)
-        resp.ssgiResponse.headers.get("theHeader") must be (Some("4,7"))
+        resp().headers.get("theHeader") must be (Some("4,7"))
       }
 
       "adding a cookie should serialize the servlet cookie to a header" in {
         resp.addCookie(new Cookie("theCookie", "the value"))
-        resp.ssgiResponse.headers.get("Set-Cookie") must be (Some("theCookie=the+value"))
+        resp().headers.get("Set-Cookie") must be (Some("theCookie=the+value"))
       }
     }
 
@@ -138,13 +138,13 @@ class SsgiServletResponseSpec extends WordSpec with MustMatchers with MockitoSug
       "to the output stream should produce a byte array" in {
         val bytes = "helloWorld".getBytes("UTF-8")
         resp.getOutputStream.write(bytes)
-        resp.ssgiResponse.body.asInstanceOf[Array[Byte]] must be (bytes)
+        resp().body.asInstanceOf[Array[Byte]] must be (bytes)
       }
 
       "to the print writer should produce a byte array" in {
         val bytes = "helloWorld".getBytes("UTF-8")
         resp.getWriter.print("helloWorld")
-        resp.ssgiResponse.body.asInstanceOf[Array[Byte]] must be (bytes)
+        resp().body.asInstanceOf[Array[Byte]] must be (bytes)
       }
     }
 
@@ -154,7 +154,7 @@ class SsgiServletResponseSpec extends WordSpec with MustMatchers with MockitoSug
       }
       "set the status correctly if the error code > 400" in {
         resp.sendError(404)
-        resp.ssgiResponse.status must be (404)
+        resp().status must be (404)
       }
     }
 
@@ -162,7 +162,7 @@ class SsgiServletResponseSpec extends WordSpec with MustMatchers with MockitoSug
 
       "encode the url" in {
         resp.sendRedirect("/go/somewhere")
-        val ssgi = resp.ssgiResponse
+        val ssgi = resp()
         ssgi.headers.get("Location") must be (Some("encoded"))
         ssgi.status must be (302)
       }

@@ -34,5 +34,5 @@ object Response {
   /**
    * An empty response with a status of OK.
    */
-  val Ok: Response[String] = Response(status = 200, body = "")
+  val Ok: Response[Array[Byte]] = Response(body = Array.empty)
 }

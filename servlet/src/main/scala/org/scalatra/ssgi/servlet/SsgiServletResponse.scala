@@ -7,14 +7,6 @@ import java.util.{Calendar, TimeZone, Locale}
 import java.io.{PrintWriter}
 import org.apache.commons.lang.time.FastDateFormat
 
-trait SsgiResponseWrapping {
-
-  private[servlet] var _ssgiResponse: Response[Any] = Response(200, Map.empty, Array[Byte]())
-
-  def ssgiResponse: Response[Any]
-  
-}
-
 object SsgiServletResponse {
   val DEFAULT_CONTENT_TYPE = "text/plain"
   val DEFAULT_ENCODING = "UTF-8"
@@ -26,21 +18,20 @@ object SsgiServletResponse {
  * A wrapper for a HttpServletResponse that builds up an SSGI Response.
  * This class makes the reset operations NOOP's
  */
-class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServletResponse with SsgiResponseWrapping {
+class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServletResponse with ResponseBuilder {
 
   import SsgiServletResponse._
 
   private var _out = new ByteArrayServletOutputStream
   private var _pw = new PrintWriter(_out)
 
-
   /**
    * Returns the SSGI Response with the default headers added if necessary
    */
-  def ssgiResponse = {
+  override def apply() = {
     val hdrs = generateDefaultHeaders
     _pw.flush
-    _ssgiResponse.copy(headers = hdrs, body = _out.toByteArray)
+    response.copy(headers = hdrs, body = _out.toByteArray)
   }
 
   /**
@@ -51,7 +42,7 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
    */
   def setStatus(statusCode: Int, body: String) {
     _pw.write(body)
-    _ssgiResponse = _ssgiResponse.copy(statusCode)
+    response = response.copy(statusCode)
   }
 
   /**
@@ -60,7 +51,7 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
    * @param statusCode the status code for this response
    */
   def setStatus(statusCode: Int) = {
-    _ssgiResponse = _ssgiResponse.copy(statusCode)
+    response = response.copy(statusCode)
   }
 
   /**
@@ -98,7 +89,7 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
    * @param value the value of the header
    */
   def setHeader(name: String, value: String) =
-    _ssgiResponse = _ssgiResponse.copy(headers = _ssgiResponse.headers + (name -> value))
+    response = response.copy(headers = response.headers + (name -> value))
 
   /**
    * Adds a date header to the response. 
@@ -126,8 +117,8 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
    * @param url the URL to redirect to
    */
   def sendRedirect(url: String) = {
-    val redirectHeaders = _ssgiResponse.headers + ("Location" -> encodeRedirectURL(url))
-    _ssgiResponse = _ssgiResponse.copy(302, redirectHeaders )
+    val redirectHeaders = response.headers + ("Location" -> encodeRedirectURL(url))
+    response = response.copy(302, redirectHeaders )
   }
 
   /**
@@ -189,7 +180,7 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
    *
    * @param key The key to check the header collection for
    */
-  def containsHeader(key: String) = _ssgiResponse.headers.contains(key)
+  def containsHeader(key: String) = response.headers.contains(key)
 
   /**
    * Adds a cookie to the response
@@ -201,7 +192,7 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
   /**
    * Gets the currently configured locale for this response
    */
-  def getLocale = _ssgiResponse.headers.get("Content-Language") match {
+  def getLocale = response.headers.get("Content-Language") match {
     case Some(locLang) => {
       locLang.split("-").toList match {
         case lang :: Nil => new Locale(lang)
@@ -224,7 +215,7 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
    * Resets this response completely discarding the current content and headers and sets the status to 200
    */
   def reset = {
-    _ssgiResponse = Response(200, Map.empty, Array[Byte]())
+    response = Response(200, Map.empty, Array[Byte]())
     _out.close
     _out = new ByteArrayServletOutputStream
     _pw = new PrintWriter(_out)
@@ -239,7 +230,7 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
    * Resets the content of this response discarding the current content
    */
   def resetBuffer = {
-    _ssgiResponse = _ssgiResponse.copy(body = Array[Byte]())
+    response = response.copy(body = Array[Byte]())
     _out.close
     _out = new ByteArrayServletOutputStream
     _pw = new PrintWriter(_out)
@@ -286,7 +277,7 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
   def setCharacterEncoding(encoding: String) = {
     //TODO: make this more sensible? There might be more content in there than just a charset
     val newType = getContentType.split(";").head + "; charset=" + encoding
-    _ssgiResponse = _ssgiResponse.copy(headers = _ssgiResponse.headers + ("Content-Type" -> newType))
+    response = response.copy(headers = response.headers + ("Content-Type" -> newType))
     setHeader("Content-Type", newType)
   }
 
@@ -305,7 +296,7 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
   /**
    * Gets the content type that belongs to this response
    */
-  def getContentType = _ssgiResponse.headers.get("Content-Type") getOrElse DEFAULT_CONTENT_TYPE
+  def getContentType = response.headers.get("Content-Type") getOrElse DEFAULT_CONTENT_TYPE
 
   /**
    * Get the character encoding that belongs to this response
@@ -324,10 +315,10 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
   }
 
   private def generateDefaultHeaders = {
-    var headers = _ssgiResponse.headers
+    var headers = response.headers
     if(!headers.contains("Content-Type")) headers += "Content-Type" -> "%s; charset=%s".format(getContentType, getCharacterEncoding)
     if(!headers.contains("Content-Length")) {
-      headers += "Content-Length" -> _ssgiResponse.body.asInstanceOf[Array[Byte]].length.toString
+      headers += "Content-Length" -> response.body.asInstanceOf[Array[Byte]].length.toString
     }
     if(!headers.contains("Content-Language")) headers += "Content-Language" -> getLocale.toString.replace('_', '-')
     if(!headers.contains("Date")) headers += "Date" -> formatDate(Calendar.getInstance.getTimeInMillis)
@@ -335,11 +326,11 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
   }
 
   private def addSsgiHeader(name: String, value: String) = {
-   val headers =  _ssgiResponse.headers.get(name) match {
-      case Some(hdrVal) => _ssgiResponse.headers + (name -> "%s,%s".format(hdrVal, value))
-      case _ => _ssgiResponse.headers + (name -> value.toString)
+   val headers =  response.headers.get(name) match {
+      case Some(hdrVal) => response.headers + (name -> "%s,%s".format(hdrVal, value))
+      case _ => response.headers + (name -> value.toString)
     }
-    _ssgiResponse = _ssgiResponse.copy(headers = headers)
+    response = response.copy(headers = headers)
   }
 
   private def formatDate(millis: Long) = {
