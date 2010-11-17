@@ -6,6 +6,7 @@ import java.lang.String
 import java.util.{Calendar, TimeZone, Locale}
 import java.io.{PrintWriter}
 import org.apache.commons.lang.time.FastDateFormat
+import java.nio.charset.Charset
 
 object SsgiServletResponse {
   val DATE_FORMAT = FastDateFormat.getInstance("EEE', 'dd' 'MMM' 'yyyy' 'HH:mm:ss' 'Z", TimeZone.getTimeZone("GMT"))
@@ -259,7 +260,7 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
     var headers = response.headers
     if(!headers.contains("Content-Type")) headers += "Content-Type" -> "%s; charset=%s".format(getContentType, getCharacterEncoding)
     if(!headers.contains("Content-Length")) {
-      headers += "Content-Length" -> response.body.asInstanceOf[Array[Byte]].length.toString
+      headers += "Content-Length" -> body.asInstanceOf[Array[Byte]].length.toString
     }
     if(!headers.contains("Content-Language")) headers += "Content-Language" -> getLocale.toString.replace('_', '-')
     if(!headers.contains("Date")) headers += "Date" -> formatDate(Calendar.getInstance.getTimeInMillis)
@@ -287,4 +288,8 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
      sc.getSecure,
      sc.getComment,
      sc.getVersion))
+
+  // TODO temporary hack around mismatch between streaming and in-memory bodies
+  override def body: Any = _out.toByteArray
+  override def body_=[A <% Renderable](body: A): Unit = body.writeTo(_out, Charset.forName(characterEncoding))
 }
