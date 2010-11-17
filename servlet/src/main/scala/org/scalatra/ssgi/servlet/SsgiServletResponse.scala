@@ -29,7 +29,7 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
   override def apply() = {
     val hdrs = generateDefaultHeaders
     _pw.flush
-    response.copy(headers = hdrs, body = _out.toByteArray)
+    Response(status, hdrs, _out.toByteArray)
   }
 
   /**
@@ -186,7 +186,7 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
    * Resets the content of this response discarding the current content
    */
   def resetBuffer = {
-    response = response.copy(body = Array[Byte]())
+    body = Array[Byte]()
     _out.close
     _out = new ByteArrayServletOutputStream
     _pw = new PrintWriter(_out)

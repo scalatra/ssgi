@@ -56,7 +56,7 @@ trait ResponseBuilder {
    */
   def sendError(code: Int, message: String): Unit = {
     sendError(code)
-    response = response.copy(body = message)
+    body = message
   }
 
   /**
@@ -110,6 +110,11 @@ trait ResponseBuilder {
   }
 
   protected def encodeRedirectUrl(url: String): String
+
+  def body: Any = response.body
+
+  // TODO SsgiServletResponse currently assumes a Response[Array[Byte]].  Undo that assumption.
+  def body_=[A <% Renderable](body: A): Unit = response = response.copy(body = body)
 }
 
 object ResponseBuilder {
