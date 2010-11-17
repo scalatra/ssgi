@@ -8,8 +8,6 @@ import java.io.{PrintWriter}
 import org.apache.commons.lang.time.FastDateFormat
 
 object SsgiServletResponse {
-  val DEFAULT_CONTENT_TYPE = "text/plain"
-  val DEFAULT_ENCODING = "UTF-8"
   val DATE_FORMAT = FastDateFormat.getInstance("EEE', 'dd' 'MMM' 'yyyy' 'HH:mm:ss' 'Z", TimeZone.getTimeZone("GMT"))
 
 }
@@ -50,9 +48,7 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
    *
    * @param statusCode the status code for this response
    */
-  def setStatus(statusCode: Int) = {
-    response = response.copy(statusCode)
-  }
+  def setStatus(statusCode: Int): Unit = status = statusCode
 
   /**
    * Adds an int header to the response
@@ -83,15 +79,6 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
   }
 
   /**
-   * Sets a header to the response. This replaces an existing header if it was there previously
-   *
-   * @param name the name of the header
-   * @param value the value of the header
-   */
-  def setHeader(name: String, value: String) =
-    response = response.copy(headers = response.headers + (name -> value))
-
-  /**
    * Adds a date header to the response. 
    *
    * @param name the name of the header
@@ -111,38 +98,7 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
     setHeader(name, formatDate(value))
   }
 
-  /**
-   * Sets the status to 302 and adds the location header for the redirect
-   *
-   * @param url the URL to redirect to
-   */
-  def sendRedirect(url: String) = {
-    val redirectHeaders = response.headers + ("Location" -> encodeRedirectURL(url))
-    response = response.copy(302, redirectHeaders )
-  }
 
-  /**
-   * Sets the status code of the response to the code provided.
-   * This'd better be a 4xx or 5xx status!
-   *
-   * @param code The numeric status code of the error
-   */
-  def sendError(code: Int) = {
-    if (code < 400) throw new Exception("This needs to be a status code > 400")
-    setStatus(code)
-  }
-
-  /**
-   * Sets the status code of the response to the code provided.
-   * This'd better be a 4xx or 5xx status!
-   *
-   * @param code The numeric status code of the error
-   * @param message The body of the error response
-   */
-  def sendError(code: Int, message: String) = {
-    if (code < 400) throw new Exception("This needs to be a status code > 400")
-    setStatus(code, message)
-  }
 
   /**
    * Encodes the redirect url
@@ -260,7 +216,7 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
    *
    * @param contentType The content type to use for this response
    */
-  def setContentType(contentType: String) = setHeader("Content-Type", contentType)
+  def setContentType(contentType: String): Unit = this.contentType = contentType
 
   /**
    * Sets the content length of this response
@@ -274,12 +230,7 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
    *
    * @param encoding The encoding to use for this response
    */
-  def setCharacterEncoding(encoding: String) = {
-    //TODO: make this more sensible? There might be more content in there than just a charset
-    val newType = getContentType.split(";").head + "; charset=" + encoding
-    response = response.copy(headers = response.headers + ("Content-Type" -> newType))
-    setHeader("Content-Type", newType)
-  }
+  def setCharacterEncoding(encoding: String): Unit = characterEncoding = encoding
 
   /**
    * Gets the printwriter for this response
@@ -289,30 +240,20 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
   /**
    * Get the output stream for this response
    * This wraps a ByteArrayOutputStream so be careful with huge responses.
-   * Use the SSGI Response directly instead of this method if  you need to send a big response
+   *
+   *  Use the SSGI Response directly instead of this method if  you need to send a big response
    */
   def getOutputStream = _out
 
   /**
    * Gets the content type that belongs to this response
    */
-  def getContentType = response.headers.get("Content-Type") getOrElse DEFAULT_CONTENT_TYPE
+  def getContentType: String = contentType
 
   /**
    * Get the character encoding that belongs to this response
    */
-  def getCharacterEncoding = {
-    val ct = getContentType
-    val start = ct.indexOf("charset=")
-    if(start > 0){
-      val encStart = start + 8
-      val end = ct.indexOf(" ", encStart)
-      if(end > 0) ct.substring(encStart, end)
-      else ct.substring(encStart)
-    } else {
-      DEFAULT_ENCODING
-    }
-  }
+  def getCharacterEncoding: String = characterEncoding
 
   private def generateDefaultHeaders = {
     var headers = response.headers

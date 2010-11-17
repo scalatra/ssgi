@@ -1,4 +1,5 @@
-package org.scalatra.ssgi.servlet
+package org.scalatra.ssgi
+package servlet
 
 import org.scalatest.matchers.MustMatchers
 import org.scalatest.mock.MockitoSugar
@@ -30,7 +31,7 @@ class SsgiServletResponseSpec extends WordSpec with MustMatchers with MockitoSug
       }
 
       "contain the Content-Type header" in {
-        actual.headers.get("Content-Type") must be (Some(SsgiServletResponse.DEFAULT_CONTENT_TYPE + "; charset=" + SsgiServletResponse.DEFAULT_ENCODING))
+        actual.headers.get("Content-Type") must be (Some(ResponseBuilder.DefaultContentType + "; charset=" + ResponseBuilder.DefaultEncoding))
       }
 
       "contain the Content-Language header" in {
@@ -55,7 +56,7 @@ class SsgiServletResponseSpec extends WordSpec with MustMatchers with MockitoSug
       }
 
       "getting the character encoding when none is set should return the default" in {
-        resp.getCharacterEncoding must be (SsgiServletResponse.DEFAULT_ENCODING)
+        resp.getCharacterEncoding must be (ResponseBuilder.DefaultEncoding)
       }
 
       "setting the character encoding should return the correct encoding" in {
