@@ -24,4 +24,6 @@ class ByteArrayServletOutputStream(bufSize: Int) extends ServletOutputStream {
   private[ssgi] def reallyClose { internal.close }
 
   def size = internal.size
+
+  def reset(): Unit = internal.reset()
 }

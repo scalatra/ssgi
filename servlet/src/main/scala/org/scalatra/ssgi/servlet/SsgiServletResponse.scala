@@ -291,5 +291,8 @@ class SsgiServletResponse(private val r: HttpServletResponse) extends HttpServle
 
   // TODO temporary hack around mismatch between streaming and in-memory bodies
   override def body: Any = _out.toByteArray
-  override def body_=[A <% Renderable](body: A): Unit = body.writeTo(_out, Charset.forName(characterEncoding))
+  override def body_=[A <% Renderable](body: A): Unit = {
+    _out.reset()
+    body.writeTo(_out, Charset.forName(characterEncoding))
+  }
 }
