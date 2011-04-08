@@ -3,47 +3,49 @@ package org.scalatra.ssgi
 import java.util.Locale
 
 sealed trait HttpMethod {
-  def isSafe: Boolean
+  val isSafe: Boolean
 }
 case object Options extends HttpMethod {
-  def isSafe = true
+  val isSafe = true
+  override def toString = "OPTIONS"
 }
 case object Get extends HttpMethod {
-  def isSafe = true
+  val isSafe = true
+  override def toString = "GET"
 }
 case object Head extends HttpMethod {
-  def isSafe = true
+  val isSafe = true
+  override def toString = "HEAD"
 }
 case object Post extends HttpMethod {
-  def isSafe = false
+  val isSafe = false
+  override def toString = "POST"
 }
 case object Put extends HttpMethod {
-  def isSafe = false
+  val isSafe = false
+  override def toString = "PUT"
 }
 case object Delete extends HttpMethod {
-  def isSafe = false
+  val isSafe = false
+  override def toString = "DELETE"
 }
 case object Trace extends HttpMethod {
-  def isSafe = true
+  val isSafe = true
+  override def toString = "TRACE"
 }
 case object Connect extends HttpMethod {
-  def isSafe = false
+  val isSafe = false
+  override def toString = "CONNECT"
 }
 case class ExtensionMethod(name: String) extends HttpMethod {
-  def isSafe = false
+  val isSafe = false
 }
 
 object HttpMethod {
-  private val methodMap = Map(
-    "OPTIONS" -> Options,
-    "GET" -> Get,
-    "HEAD" -> Head,
-    "POST" -> Post,
-    "PUT" -> Put,
-    "DELETE" -> Delete,
-    "TRACE" -> Trace,
-    "CONNECT" -> Connect
-  )
+  private val methodMap =
+    Map(List(Options, Get, Head, Post, Put, Delete, Trace, Connect) map {
+      method => (method.toString, method)
+    } : _*)
 
   def apply(name: String): HttpMethod = {
     val canonicalName = name.toUpperCase(Locale.ENGLISH)
