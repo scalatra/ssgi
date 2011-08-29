@@ -16,6 +16,7 @@ package org.scalatra.ssgi
  */
 case class Response[+A](status: Int = 200, headers: Map[String, String] = Map.empty, body: A)
                        (implicit renderer: A => Renderable) {
+  require(Response.STATUS_CODES.contains(status), "The response status code is not valid")
   /**
    * Returns a response by applying a function to this response's body.  The new response has the same status and
    * headers, and its body is the result of the function.
@@ -35,4 +36,6 @@ object Response {
    * An empty response with a status of OK.
    */
   val Ok: Response[Array[Byte]] = Response(body = Array.empty)
+
+  val STATUS_CODES = List(100, 101, (200 to 206), (300 to 307), (400 to 417), (500 to 505)).flatten
 }

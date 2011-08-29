@@ -3,8 +3,10 @@ package org.scalatra.ssgi
 import scala.xml.NodeSeq
 import java.nio.charset.Charset
 import annotation.tailrec
+import java.nio.ByteBuffer
 import java.io._
 import resource._
+import java.nio.channels.{Channels, WritableByteChannel, ReadableByteChannel}
 
 trait Renderable {
   def writeTo(out: OutputStream, charset: Charset): Unit
@@ -22,18 +24,30 @@ trait InputStreamRenderable extends Renderable {
 
   def writeTo(out: OutputStream, cs: Charset) {
     val in = this.in // it's a def, and we only want one
-    val buf = new Array[Byte](4096)
-    @tailrec
-    def loop() {
-      val n = in.read(buf)
-      if (n >= 0) {
-        out.write(buf, 0, n)
-        loop()
-      }
-    }
-    loop()
+    streamCopy(Channels.newChannel(in), Channels.newChannel(out))
     in.close()
   }
+
+  private def streamCopy(src: ReadableByteChannel, dest: WritableByteChannel) {
+    val buffer = getByteBuffer(4 * 1024)
+    @tailrec
+    def loop() {
+      if(src.read(buffer) > 0) {
+        buffer.flip
+        dest.write(buffer)
+        buffer.compact
+        loop
+      }
+    }
+    loop
+
+    buffer.flip
+    while(buffer.hasRemaining) {
+      dest.write(buffer)
+    }
+  }
+
+  protected def getByteBuffer(size: Int) = ByteBuffer.allocate(size)
 }
 
 /**
@@ -43,6 +57,8 @@ trait FileRenderable extends InputStreamRenderable {
   def file: File
 
   def in: InputStream = new FileInputStream(file)
+
+  override protected def getByteBuffer(size: Int) = ByteBuffer.allocateDirect(size) // zero-copy byte buffer
 }
 
 object Renderable {
